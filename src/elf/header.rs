@@ -20,9 +20,56 @@ const EI_DATA: usize = 5;
 
 // minimum size requirements
 const ELF_HEADER_SIZE: usize = 64;
-const E_IDENT_SIZE: usize = 64;
+const E_IDENT_SIZE: usize = 16;
 
 // ELF64 header structure matching specification layout. AAANd i have migraine. good night. will continue tomorrow.
 pub struct ElfHeader {
-    
+    e_ident: [usize; ELF_HEADER_SIZE],
+    e_type: u16,
+    e_machine: u16,
+    e_version: u32,
+    e_entry: u64,
+    e_phoff: u64,
+    e_shoff: u64,
+    e_flags: u32,
+    e_ehsize: u16,
+    e_phentsize: u16,
+    e_phnum: u16,
+    e_shentsize: u16,
+    e_shnum: u16,
+    e_shstrndx: u16,
+}
+
+fn parse_header(bytes: &[u8]) -> Result<ElfHeader, DisasmError> {
+    if bytes.len() < ELF_HEADER_SIZE {
+        return Err(DisasmError::TruncatedHeader);
+    }
+
+    if bytes[EI_MAG0] != ELF_MAGIC_0 {
+        return Err(DisasmError::InvalidElfMagic);
+    }
+
+    if bytes[EI_MAG1] != ELF_MAGIC_1 {
+        return Err(DisasmError::InvalidElfMagic);
+    }
+
+    if bytes[EI_MAG2] != ELF_MAGIC_2 {
+        return Err(DisasmError::InvalidElfMagic);
+    }
+
+    if bytes[EI_MAG3] != ELF_MAGIC_3 {
+        return Err(DisasmError::InvalidElfMagic);
+    }
+
+    // verify 64 bit class
+    if bytes[EI_CLASS] != ELF_CLASS_64 {
+        return Err(DisasmError::InvalidElfClass);
+    }
+
+    // verify little endian encoding.
+    if bytes[EI_DATA] != ELF_DATA_2LSB {
+        return Err(DisasmError::InvalidEndianness);
+    }
+
+    // TODO extract e_ident array (first 16 bytes)
 }

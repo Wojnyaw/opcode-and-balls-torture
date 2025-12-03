@@ -4,7 +4,6 @@ pub mod section;
 use header::parse_header;
 use section::find_text_section;
 use crate::error::DisasmError;
-use core::slice;
 
 pub struct TextSection<'a> {
     pub offset: usize,
