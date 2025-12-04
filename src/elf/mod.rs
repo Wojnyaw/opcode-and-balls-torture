@@ -24,8 +24,9 @@ pub fn parse_elf<'a>(bytes: &'a [u8]) -> Result<TextSection<'a>, DisasmError> {
     let section_header_count = elf_header.e_shnum;
 
     // each ELF64 section header is exactly 64 bytes.
+    // TODO this WILL overflow. one day, convert e_shoff safely, when complexity really demands for it.
     const SECTION_HEADER_SIZE: usize = 64;
-    let required_size = section_header_offset + (section_header_count * SECTION_HEADER_SIZE);
+    let required_size = section_header_offset as usize + (section_header_count as usize * SECTION_HEADER_SIZE);
 
     if required_size > bytes.len() {
         return Err(DisasmError::TruncatedHeader);
