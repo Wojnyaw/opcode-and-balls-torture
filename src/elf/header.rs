@@ -1,5 +1,6 @@
 use crate::error::DisasmError;
 use std::convert::TryInto;
+use super::utils::{read_u16_le, read_u32_le, read_u64_le};
 
 // ELF64 header constants.
 const ELF_MAGIC_0: u8 = 0x7f;
@@ -24,7 +25,7 @@ const E_IDENT_SIZE: usize = 16;
 
 // ELF64 header structure matching specification layout. AAANd i have migraine. good night. will continue tomorrow.
 pub struct ElfHeader {
-    pub e_ident: [usize; E_IDENT_SIZE],
+    pub e_ident: [u8; E_IDENT_SIZE],
     pub e_type: u16,
     pub e_machine: u16,
     pub e_version: u32,
@@ -95,45 +96,22 @@ pub fn parse_header(bytes: &[u8]) -> Result<ElfHeader, DisasmError> {
     // 62-63  | e_shstrndx   | 2    | u16
     // i might later forget to delete this lmao but whatever i need this
 
-    // helper functions to read little endian u16, u32, u64 from byte slice at offset
-    fn read_u16_le(data: &[u8], offset: usize) -> u16 {
-        let slice = &data[offset..offset + 2];
-        let array: [u8; 2] = slice
-            .try_into()
-            .expect("Slice length must be exactly 2 bytes.");
-        u16::from_le_bytes(array)
-    }
 
-    fn read_u32_le(data: &[u8], offset: usize) -> u32 {
-        let slice = &data[offset..offset + 4];
-        let array: [u8; 4] = slice
-            .try_into()
-            .expect("Slice length must be exactly 4 bytes.");
-        u32::from_le_bytes(array)
-    }
-
-    fn read_u64_le(data: &[u8], offset: usize) -> u64 {
-        let slice = &data[offset..offset + 8];
-        let array: [u8; 8] = slice
-            .try_into()
-            .expect("Slice length must be exactly 8 bytes.");
-        u64::from_le_bytes(array)
-    }
 
     // extract all header fields at their specified byte offsets.
-    let e_type = read_u16_le(bytes, 16);
-    let e_machine = read_u16_le(bytes, 18);
-    let e_version = read_u32_le(bytes, 20);
-    let e_entry = read_u64_le(bytes, 24);
-    let e_phoff = read_u64_le(bytes, 32);
-    let e_shoff = read_u64_le(bytes, 40);
-    let e_flags = read_u32_le(bytes, 48);
-    let e_ehsize = read_u16_le(bytes, 52);
-    let e_phentsize = read_u16_le(bytes, 54);
-    let e_phnum = read_u16_le(bytes, 56);
-    let e_shentsize = read_u16_le(bytes, 58);
-    let e_shnum = read_u16_le(bytes, 60);
-    let e_shstrndx = read_u16_le(bytes, 62);
+    let e_type = read_u16_le(bytes, 16)?;
+    let e_machine = read_u16_le(bytes, 18)?;
+    let e_version = read_u32_le(bytes, 20)?;
+    let e_entry = read_u64_le(bytes, 24)?;
+    let e_phoff = read_u64_le(bytes, 32)?;
+    let e_shoff = read_u64_le(bytes, 40)?;
+    let e_flags = read_u32_le(bytes, 48)?;
+    let e_ehsize = read_u16_le(bytes, 52)?;
+    let e_phentsize = read_u16_le(bytes, 54)?;
+    let e_phnum = read_u16_le(bytes, 56)?;
+    let e_shentsize = read_u16_le(bytes, 58)?;
+    let e_shnum = read_u16_le(bytes, 60)?;
+    let e_shstrndx = read_u16_le(bytes, 62)?;
 
     // verify e_shnum within reasonable bounds.
     // prevent potential DoS from malicious files claiming millions of sections.

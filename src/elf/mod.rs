@@ -1,5 +1,6 @@
 pub mod header;
 pub mod section;
+pub mod utils;
 
 use header::parse_header;
 use section::find_text_section;
